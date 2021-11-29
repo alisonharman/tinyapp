@@ -26,9 +26,16 @@ app.post("/urls", (req, res) => {
   //res.send("Ok");         // Respond with 'Ok' (we will replace this)
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body["longURL"];
-  console.log('URLDATABASE', urlDatabase);
+ 
   res.redirect(`/urls/:${shortURL}`);
 });
+
+app.post("/urls/:shortURL/delete", (req, res) => {
+  delete urlDatabase[req.params.shortURL];
+  console.log('URLDATABASE', urlDatabase);
+  res.redirect('/urls');
+}
+  )
 /*
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
