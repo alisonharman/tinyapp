@@ -73,6 +73,7 @@ app.post("/urls/:shortURL", (req, res) => {
   console.log('BODY', req.body);
   urlDatabase[req.params.shortURL] = req.body["longURL"]
   console.log(urlDatabase);
+  res.redirect(`/urls/`);
 });
 
 app.listen(PORT, () => {
