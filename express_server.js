@@ -30,7 +30,7 @@ const users = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur"
+    password: "123"
   },
   "user2RandomID": {
     id: "user2RandomID",
@@ -93,7 +93,6 @@ app.get("/urls.json", (req, res) => {
 app.get("/urls", (req, res) => {
   //console.log(req.cookies["user_id"]);
   //console.log(users[req.cookies["user_id"]])
-  console.log(users);
   const user = users[req.cookies["user_id"]] //|| users["userRandomID"]
   //console.log(user);
   //const templateVars = {
@@ -114,8 +113,24 @@ app.get('/login', (req, res) => {
 })
 
 app.post('/login', (req, res) => {
-  const username = req.body.username;
-  //res.cookie('username', username);
+  const email = req.body.email;
+  const password = req.body["password"];
+
+  console.log(email, password);
+
+  const user = getUserByEmail(email);
+
+  console.log(user);
+
+  if (!user) {
+    return res.status(403).send("No user with that email")
+  }
+
+  if (password !== user.password) {
+      return res.status(403).send("Incorrect password.")
+  }
+
+  res.cookie('user_id', user.id);
   res.redirect('/urls');
 })
 
