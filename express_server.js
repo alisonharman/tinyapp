@@ -24,7 +24,7 @@ const getUserByEmail = email => {
 const urlsForUser = function (id) {
   let urls = {};
   if (!id) {
-    return urls;
+    return undefined;
   }
   for (const property in urlDatabase) {
     if (urlDatabase[property]["userID"] == id) {
@@ -33,7 +33,20 @@ const urlsForUser = function (id) {
     }
   }
   return urls;
-}
+};
+
+const allowedAccess = function(id, shortURL) {
+  const urls = urlsForUser(id);
+  if (!id) {
+    return false;
+  }
+  for (const property in urls) {
+    if (property === shortURL) {
+      return true;
+    }
+  }
+  return false;
+};
 
   /*
   const urlDatabase = {
@@ -103,6 +116,7 @@ const urlsForUser = function (id) {
     // does this shortURL belong to the user?
     const urls = urlsForUser(req.cookies["user_id"]);
 
+/*
     const allowed = shortURL => {
       for (const property in urls) {
         if (property === shortURL) {
@@ -111,8 +125,9 @@ const urlsForUser = function (id) {
       }
       return false;
     }
+    */
     
-    if (allowed(shortURL)) {
+    if (allowedAccess(req.cookies["user_id"], shortURL)) {
       const templateVars = {
         user: users[req.cookies["user_id"]],
         shortURL: req.params.shortURL,
@@ -124,7 +139,6 @@ const urlsForUser = function (id) {
     res.send('You do not have permission to edit this short URL.')
     
   });
-
 
   app.post("/urls", (req, res) => {
     // only registered and logged in users can create new tiny URLs
@@ -232,8 +246,29 @@ const urlsForUser = function (id) {
   });
 
   app.post("/urls/:shortURL", (req, res) => {
-    urlDatabase[req.params.shortURL]["longURL"] = req.body["longURL"]
-    res.redirect(`/urls/`);
+    
+    const user = users[req.cookies["user_id"]]
+    const shortURL = req.params.shortURL;
+
+    const templateVars = {
+      user: user,
+      urls: urlsForUser(req.cookies["user_id"])
+    }
+
+     // should not display the page unless the user is logged in
+     if (!user) {
+      return res.render('urls_main', templateVars);
+    }
+
+    // does this shortURL belong to the user?
+    if (allowedAccess(req.cookies["user_id"], shortURL)) {
+      urlDatabase[req.params.shortURL]["longURL"] = req.body["longURL"]
+      return res.redirect(`/urls/`);
+    }
+
+    console.log(urlDatabase);
+    return res.status(400).send('did not have permission to post');
+    
   });
 
 
