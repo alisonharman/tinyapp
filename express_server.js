@@ -93,53 +93,6 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
-app.get("/urls/new", (req, res) => {
-  const shortID = generateRandomString();
-  const templateVars = {
-    user: users[req.cookies["user_id"]],
-    // shortURL: shortID
-  };
-  res.render("urls_new", templateVars);
-});
-
-
-app.get("/urls/:shortURL", (req, res) => {
-
-  const user = users[req.cookies["user_id"]]
-  const shortURL = req.params.shortURL;
-
-  // should not display the page unless the user is logged in
-  if (!user) {
-    return res.render('urls_main', {user: undefined} );
-  }
-
-  // does this shortURL belong to the user?
-  const urls = urlsForUser(req.cookies["user_id"]);
-
-  /*
-      const allowed = shortURL => {
-        for (const property in urls) {
-          if (property === shortURL) {
-            return true;
-          }
-        }
-        return false;
-      }
-      */
-
-  if (allowedAccess(req.cookies["user_id"], shortURL)) {
-    const templateVars = {
-      user: users[req.cookies["user_id"]],
-      shortURL: req.params.shortURL,
-      longURL: urlDatabase[req.params.shortURL]["longURL"]
-    };
-    return res.render("urls_show", templateVars);
-  }
-
-  res.send('You do not have permission to edit this short URL.')
-
-});
-
 app.post("/urls", (req, res) => {
   // only registered and logged in users can create new tiny URLs
   const longURL = req.body["longURL"]
@@ -153,42 +106,6 @@ app.post("/urls", (req, res) => {
   }
   res.redirect('/urls')
 });
-
-app.post("/urls/:shortURL/delete", (req, res) => {
-
-  const user = users[req.cookies["user_id"]]
-  const shortURL = req.params.shortURL;
-
-  const templateVars = {
-    user: user,
-    urls: urlsForUser(req.cookies["user_id"])
-  }
-
-  // should not display the page unless the user is logged in
-  if (!user) {
-    return res.render('urls_main', templateVars);
-  }
-
-  // does this shortURL belong to the user?
-  if (allowedAccess(req.cookies["user_id"], shortURL)) {
-    delete urlDatabase[req.params.shortURL];
-    res.redirect('/urls');
-  }
-
-  return res.status(400).send('User did not have permission to delete URL');
-})
-
-
-
-app.get('/logout', (_req, res) => {
-  res.clearCookie('user_id').redirect('/urls')
-})
-
-/*
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-*/
 
 
 
@@ -234,7 +151,6 @@ app.get('/register', (req, res) => {
 
 app.post('/register', (req, res) => {
 
-
   const email = req.body["email"];
   const password = req.body["password"];
 
@@ -254,14 +170,43 @@ app.post('/register', (req, res) => {
   res.redirect('/urls')
 })
 
-app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL]["longURL"];
-  // need to deal with case with input shortURL params not valid
-  res.redirect(longURL);
+
+app.get("/urls/new", (req, res) => {
+  const templateVars = {
+    user: users[req.cookies["user_id"]],
+  };
+  res.render("urls_new", templateVars);
 });
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
+
+
+app.get('/logout', (_req, res) => {
+  res.clearCookie('user_id').redirect('/urls')
+})
+
+
+app.get("/urls/:shortURL", (req, res) => {
+
+  const user = users[req.cookies["user_id"]]
+  const shortURL = req.params.shortURL;
+
+  // should not display the page unless the user is logged in
+  if (!user) {
+    return res.render('urls_main', {user: undefined} );
+  }
+
+  // does this shortURL belong to the user?
+  if (allowedAccess(req.cookies["user_id"], shortURL)) {
+    const templateVars = {
+      user: users[req.cookies["user_id"]],
+      shortURL: req.params.shortURL,
+      longURL: urlDatabase[req.params.shortURL]["longURL"]
+    };
+    return res.render("urls_show", templateVars);
+  }
+
+  res.send('You do not have permission to edit this short URL.')
+
 });
 
 app.post("/urls/:shortURL", (req, res) => {
@@ -291,6 +236,42 @@ app.post("/urls/:shortURL", (req, res) => {
 });
 
 
+
+app.post("/urls/:shortURL/delete", (req, res) => {
+
+  const user = users[req.cookies["user_id"]]
+  const shortURL = req.params.shortURL;
+
+  const templateVars = {
+    user: user,
+    urls: urlsForUser(req.cookies["user_id"])
+  }
+
+  // should not display the page unless the user is logged in
+  if (!user) {
+    return res.render('urls_main', templateVars);
+  }
+
+  // does this shortURL belong to the user?
+  if (allowedAccess(req.cookies["user_id"], shortURL)) {
+    delete urlDatabase[req.params.shortURL];
+    res.redirect('/urls');
+  }
+
+  return res.status(400).send('User did not have permission to delete URL');
+})
+
+
+
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL]["longURL"];
+  // need to deal with case with input shortURL params not valid
+  res.redirect(longURL);
+});
+
+app.get("/hello", (req, res) => {
+  res.send("<html><body>Hello <b>World</b></body></html>\n");
+});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
