@@ -14,6 +14,13 @@ function generateRandomString() {
   return result;
 }
 
+const getUserByEmail = email => {
+  const userId = Object.keys(users).find(id => users[id].email === email)
+  if (!userId) return null
+  const user = users[userId]
+  return { id: userId, ...user }
+}
+
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
@@ -71,12 +78,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   res.redirect('/urls');
 })
 
-app.post('/register', (req, res) => {
-  const userID = generateRandomString();
-  users[userID] = { id: userID, email: req.body["email"], password: req.body["password"] }
-  res.cookie('user_id', userID);
-  res.redirect('/urls')
-})
+
 
 app.get('/logout', (_req, res) => {
   res.clearCookie('user_id').redirect('/urls')
@@ -91,7 +93,7 @@ app.get("/urls.json", (req, res) => {
 app.get("/urls", (req, res) => {
   //console.log(req.cookies["user_id"]);
   //console.log(users[req.cookies["user_id"]])
-  //console.log(users);
+  console.log(users);
   const user = users[req.cookies["user_id"]] //|| users["userRandomID"]
   //console.log(user);
   //const templateVars = {
@@ -121,6 +123,28 @@ app.get('/register', (req, res) => {
     user: user
   }
   res.render("urls_register", templateVars);
+})
+
+app.post('/register', (req, res) => {
+
+
+  const email = req.body["email"];
+  const password = req.body["password"];
+
+  if (!email || ! password) {
+   return res.status(400).send("No email or password")
+  }
+
+  const user = getUserByEmail(email);
+
+  if (user) {
+    return res.status(400).send("Error: User with that email already exists!")
+  }
+
+  const userID = generateRandomString();
+  users[userID] = { id: userID, email: req.body["email"], password: req.body["password"] }
+  res.cookie('user_id', userID);
+  res.redirect('/urls')
 })
 
 app.get("/u/:shortURL", (req, res) => {
