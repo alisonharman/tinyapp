@@ -1,5 +1,7 @@
 const express = require("express");
 const cookieParser = require('cookie-parser')
+const bcrypt = require('bcrypt');
+
 const app = express();
 const PORT = 8080; // default port 8080
 
@@ -8,6 +10,12 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser())
 
 app.set("view engine", "ejs");
+
+const password = "123"; // found in the req.params object
+const hashedPassword = bcrypt.hashSync(password, 10);
+console.log(hashedPassword);
+console.log(bcrypt.compareSync("purple-monkey-dinosaur", hashedPassword)); // returns true
+bcrypt.compareSync("pink-donkey-minotaur", hashedPassword); // returns false
 
 function generateRandomString() {
   const result = Math.random().toString(36).substring(2, 8);
@@ -64,12 +72,12 @@ const users = {
   "AAAAAA": {
     id: "AAAAAA",
     email: "user@example.com",
-    password: "123"
+    password: "$2b$10$VDAhnmsXxYtY8ZF.l4fkQeFWg3ZWNNauWKruq17n7D6mRGTadkcc6"
   },
   "user2RandomID": {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "dishwasher-funk"
+    password: "$2b$10$VDAhnmsXxYtY8ZF.l4fkQeFWg3ZWNNauWKruq17n7D6mRGTadkcc6"
   }
 }
 
@@ -130,9 +138,15 @@ app.post('/login', (req, res) => {
     return res.status(403).send("No user with that email")
   }
 
-  if (password !== user.password) {
+  console.log(bcrypt.hashSync(user.password, 10));
+
+  if (!bcrypt.compareSync(user.password, bcrypt.hashSync(user.password, 10))) {
     return res.status(403).send("Incorrect password.")
   }
+  
+  //if (password !== user.password) {
+  //  return res.status(403).send("Incorrect password.")
+  //}
 
   res.cookie('user_id', user.id);
   res.redirect('/urls');
@@ -165,7 +179,9 @@ app.post('/register', (req, res) => {
   }
 
   const userID = generateRandomString();
-  users[userID] = { id: userID, email: req.body["email"], password: req.body["password"] }
+  const hashedPassword = bcrypt.hashSync(req.body["password"], 10);
+  users[userID] = { id: userID, email: req.body["email"], password: hashedPassword }
+  console.log(users);
   res.cookie('user_id', userID);
   res.redirect('/urls')
 })
