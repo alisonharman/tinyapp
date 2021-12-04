@@ -16,8 +16,6 @@ app.set("view engine", "ejs");
 
 const password = "123"; // found in the req.params object
 const hashedPassword = bcrypt.hashSync(password, 10);
-console.log(hashedPassword);
-console.log(bcrypt.compareSync("purple-monkey-dinosaur", hashedPassword)); // returns true
 bcrypt.compareSync("pink-donkey-minotaur", hashedPassword); // returns false
 
 function generateRandomString() {
@@ -39,7 +37,6 @@ const urlsForUser = function (id) {
   }
   for (const property in urlDatabase) {
     if (urlDatabase[property]["userID"] == id) {
-      // this is the URL object for me!
       urls[property] = urlDatabase[property];
     }
   }
@@ -59,12 +56,6 @@ const allowedAccess = function (id, shortURL) {
   return false;
 };
 
-/*
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
-};
-*/
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "AAAAAA" },
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" },
@@ -112,7 +103,6 @@ app.post("/urls", (req, res) => {
     const shortURL = generateRandomString();
     urlDatabase[shortURL] = { longURL, userID: req.session["user_id"] };
     //res.redirect(`/urls/:${shortURL}`);
-    console.log(urlDatabase);
     return res.redirect('urls')
   }
   res.redirect('/urls')
@@ -131,36 +121,23 @@ app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body["password"];
 
-  console.log(email, password);
-
   const user = getUserByEmail(email);
-
-  console.log(user);
 
   if (!user) {
     return res.status(403).send("No user with that email")
   }
 
-  console.log(bcrypt.hashSync(user.password, 10));
-
-  if (!bcrypt.compareSync(user.password, bcrypt.hashSync(user.password, 10))) {
+  if (!bcrypt.compareSync(password, user.password)) {
     return res.status(403).send("Incorrect password.")
   }
-  
-  //if (password !== user.password) {
-  //  return res.status(403).send("Incorrect password.")
-  //}
 
-  //res.cookie('user_id', user.id);
   req.session.user_id = user.id;
   res.redirect('/urls');
 })
 
 app.get('/register', (req, res) => {
   const user = users[req.session["user_id"]]
-  //const templateVars = {
-  //  username: req.cookies["username"],
-  //};
+  
   const templateVars = {
     user: user
   }
@@ -185,8 +162,6 @@ app.post('/register', (req, res) => {
   const userID = generateRandomString();
   const hashedPassword = bcrypt.hashSync(req.body["password"], 10);
   users[userID] = { id: userID, email: req.body["email"], password: hashedPassword }
-  console.log(users);
-  //res.cookies('user_id', userID);
   req.session.user_id = userID;
   res.redirect('/urls')
 })
@@ -253,7 +228,6 @@ app.post("/urls/:shortURL", (req, res) => {
     return res.redirect(`/urls/`);
   }
 
-  console.log(urlDatabase);
   return res.status(400).send('did not have permission to post');
 
 });
