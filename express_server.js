@@ -1,6 +1,7 @@
 const express = require("express");
 const cookieParser = require('cookie-parser')
 const bcrypt = require('bcrypt');
+const cookieSession = require('cookie-session');
 
 const app = express();
 const PORT = 8080; // default port 8080
@@ -8,6 +9,8 @@ const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser())
+app.use(cookieSession({ name: 'session', secret: 'purple-dinosaur' }))
+
 
 app.set("view engine", "ejs");
 
@@ -87,11 +90,11 @@ app.get("/", (req, res) => {
 
 app.get("/urls", (req, res) => {
 
-  const user = users[req.cookies["user_id"]] || undefined;
+  const user = users[req.session.user_id];
 
   const templateVars = {
     user: user,
-    urls: urlsForUser(req.cookies["user_id"])
+    urls: urlsForUser(req.session.user_id)
   }
   // should not display URLs unless the user is logged in
   if (!user) {
@@ -104,10 +107,10 @@ app.get("/urls", (req, res) => {
 app.post("/urls", (req, res) => {
   // only registered and logged in users can create new tiny URLs
   const longURL = req.body["longURL"]
-  if (req.cookies["user_id"]) {
+  if (req.session.user_id) {
     // user is logged in
     const shortURL = generateRandomString();
-    urlDatabase[shortURL] = { longURL, userID: req.cookies["user_id"] };
+    urlDatabase[shortURL] = { longURL, userID: req.session["user_id"] };
     //res.redirect(`/urls/:${shortURL}`);
     console.log(urlDatabase);
     return res.redirect('urls')
@@ -119,7 +122,7 @@ app.post("/urls", (req, res) => {
 
 app.get('/login', (req, res) => {
   const templateVars = {
-    user: users[req.cookies["user_id"]]
+    user: users[req.session["user_id"]]
   };
   res.render('urls_login', templateVars);
 })
@@ -148,12 +151,13 @@ app.post('/login', (req, res) => {
   //  return res.status(403).send("Incorrect password.")
   //}
 
-  res.cookie('user_id', user.id);
+  //res.cookie('user_id', user.id);
+  req.session.user_id = user.id;
   res.redirect('/urls');
 })
 
 app.get('/register', (req, res) => {
-  const user = users[req.cookies["user_id"]]
+  const user = users[req.session["user_id"]]
   //const templateVars = {
   //  username: req.cookies["username"],
   //};
@@ -182,28 +186,31 @@ app.post('/register', (req, res) => {
   const hashedPassword = bcrypt.hashSync(req.body["password"], 10);
   users[userID] = { id: userID, email: req.body["email"], password: hashedPassword }
   console.log(users);
-  res.cookie('user_id', userID);
+  //res.cookies('user_id', userID);
+  req.session.user_id = userID;
   res.redirect('/urls')
 })
 
 
 app.get("/urls/new", (req, res) => {
   const templateVars = {
-    user: users[req.cookies["user_id"]],
+    user: users[req.session.user_id],
   };
   res.render("urls_new", templateVars);
 });
 
 
 
-app.get('/logout', (_req, res) => {
-  res.clearCookie('user_id').redirect('/urls')
+app.get('/logout', (req, res) => {
+  //res.clearCookie('user_id').redirect('/urls')
+  req.session = null;
+  res.redirect('/urls');
 })
 
 
 app.get("/urls/:shortURL", (req, res) => {
 
-  const user = users[req.cookies["user_id"]]
+  const user = users[req.session.user_id]
   const shortURL = req.params.shortURL;
 
   // should not display the page unless the user is logged in
@@ -212,9 +219,9 @@ app.get("/urls/:shortURL", (req, res) => {
   }
 
   // does this shortURL belong to the user?
-  if (allowedAccess(req.cookies["user_id"], shortURL)) {
+  if (allowedAccess(req.session.user_id, shortURL)) {
     const templateVars = {
-      user: users[req.cookies["user_id"]],
+      user: users[req.session.user_id],
       shortURL: req.params.shortURL,
       longURL: urlDatabase[req.params.shortURL]["longURL"]
     };
@@ -227,12 +234,12 @@ app.get("/urls/:shortURL", (req, res) => {
 
 app.post("/urls/:shortURL", (req, res) => {
 
-  const user = users[req.cookies["user_id"]]
+  const user = users[req.session.user_id]
   const shortURL = req.params.shortURL;
 
   const templateVars = {
     user: user,
-    urls: urlsForUser(req.cookies["user_id"])
+    urls: urlsForUser(req.session.user_id)
   }
 
   // should not display the page unless the user is logged in
@@ -241,7 +248,7 @@ app.post("/urls/:shortURL", (req, res) => {
   }
 
   // does this shortURL belong to the user?
-  if (allowedAccess(req.cookies["user_id"], shortURL)) {
+  if (allowedAccess(req.session.user_id, shortURL)) {
     urlDatabase[req.params.shortURL]["longURL"] = req.body["longURL"]
     return res.redirect(`/urls/`);
   }
@@ -255,12 +262,12 @@ app.post("/urls/:shortURL", (req, res) => {
 
 app.post("/urls/:shortURL/delete", (req, res) => {
 
-  const user = users[req.cookies["user_id"]]
+  const user = users[req.session.user_id]
   const shortURL = req.params.shortURL;
 
   const templateVars = {
     user: user,
-    urls: urlsForUser(req.cookies["user_id"])
+    urls: urlsForUser(req.session.user_id)
   }
 
   // should not display the page unless the user is logged in
@@ -269,7 +276,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   }
 
   // does this shortURL belong to the user?
-  if (allowedAccess(req.cookies["user_id"], shortURL)) {
+  if (allowedAccess(req.session.user_id, shortURL)) {
     delete urlDatabase[req.params.shortURL];
     res.redirect('/urls');
   }
