@@ -2,6 +2,7 @@ const express = require("express");
 const cookieParser = require('cookie-parser')
 const bcrypt = require('bcrypt');
 const cookieSession = require('cookie-session');
+const getUserByEmail = require('./helpers')
 
 const app = express();
 const PORT = 8080; // default port 8080
@@ -23,12 +24,6 @@ function generateRandomString() {
   return result;
 }
 
-const getUserByEmail = email => {
-  const userId = Object.keys(users).find(id => users[id].email === email)
-  if (!userId) return null
-  const user = users[userId]
-  return { id: userId, ...user }
-}
 
 const urlsForUser = function (id) {
   let urls = {};
@@ -121,7 +116,7 @@ app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body["password"];
 
-  const user = getUserByEmail(email);
+  const user = getUserByEmail(email, users);
 
   if (!user) {
     return res.status(403).send("No user with that email")
@@ -153,7 +148,7 @@ app.post('/register', (req, res) => {
     return res.status(400).send("No email or password")
   }
 
-  const user = getUserByEmail(email);
+  const user = getUserByEmail(email, users);
 
   if (user) {
     return res.status(400).send("Error: User with that email already exists!")
