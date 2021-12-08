@@ -145,8 +145,7 @@ app.get("/urls/new", (req, res) => {
   };
   // should redirect to login if user not logged in
   if (!user) {
-    //return res.render('/login', { user: undefined });
-    return res.redirect('/login')
+    return res.redirect('/login');
   }
   res.render("urls_new", templateVars);
 });
