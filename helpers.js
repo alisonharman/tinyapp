@@ -5,4 +5,11 @@ const getUserByEmail = (email, users) => {
   return { id: userId, ...user }
 }
 
-module.exports = { getUserByEmail };
+const generateRandomString = function() {
+  const result = Math.random().toString(36).substring(2, 8);
+  return result;
+};
+
+
+
+module.exports = { getUserByEmail, generateRandomString };
