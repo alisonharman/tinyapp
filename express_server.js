@@ -180,8 +180,8 @@ app.get("/urls/:shortURL", (req, res) => {
   res.send('You do not have permission to edit this short URL.');
 });
 
-app.post("/urls/:shortURL", (req, res) => {
-
+//app.post("/urls/:shortURL", (req, res) => {
+app.put("/urls/:shortURL", (req, res) => {
   const user = users[req.session.user_id];
   const shortURL = req.params.shortURL;
   const templateVars = {
