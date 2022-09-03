@@ -1,7 +1,8 @@
 const express = require("express");
-//const cookieParser = require('cookie-parser');
 const bcrypt = require('bcrypt');
 const cookieSession = require('cookie-session');
+const methodOverride = require('method-override')
+
 const { getUserByEmail, generateRandomString } = require('./helpers');
 
 const app = express();
@@ -11,6 +12,9 @@ const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
 //app.use(cookieParser());
 app.use(cookieSession({ name: 'session', secret: 'purple-dinosaur' }));
+
+// override with POST having ?_method=DELETE
+app.use(methodOverride('_method'))
 
 app.set("view engine", "ejs");
 
@@ -196,7 +200,8 @@ app.post("/urls/:shortURL", (req, res) => {
   return res.status(400).send('did not have permission to post');
 });
 
-app.post("/urls/:shortURL/delete", (req, res) => {
+//app.post("/urls/:shortURL/delete", (req, res) => {
+app.delete("/urls/:shortURL", (req, res) => {
   const user = users[req.session.user_id];
   const shortURL = req.params.shortURL;
 
