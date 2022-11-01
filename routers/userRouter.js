@@ -2,44 +2,17 @@ const express = require("express");
 const router = express.Router();
 
 const bcrypt = require("bcrypt");
-const cookieSession = require("cookie-session");
-const methodOverride = require("method-override");
 
-const { getUserByEmail, generateRandomString } = require("../helpers");
-
-const urlsForUser = function (id) {
-  let urls = {};
-  if (!id) {
-    return undefined;
-  }
-  for (const property in urlDatabase) {
-    if (urlDatabase[property]["userID"] === id) {
-      urls[property] = urlDatabase[property];
-    }
-  }
-  return urls;
-};
-
-const allowedAccess = function (id, shortURL) {
-  const urls = urlsForUser(id);
-  if (!id) {
-    return false;
-  }
-  for (const property in urls) {
-    if (property === shortURL) {
-      return true;
-    }
-  }
-  return false;
-};
+const { getUserByEmail, generateRandomString, urlsForUser, allowedAccess } = require("../helpers");
 
 const userRouter = (users, urlDatabase) => {
+  
   router.get("/urls", (req, res) => {
     const user = users[req.session.user_id];
 
     const templateVars = {
       user: user,
-      urls: urlsForUser(req.session.user_id),
+      urls: urlsForUser(req.session.user_id, urlDatabase),
     };
     // should not display URLs unless the user is logged in
     if (!user) {
@@ -144,7 +117,7 @@ const userRouter = (users, urlDatabase) => {
     }
 
     // does this shortURL belong to the user?
-    if (allowedAccess(req.session.user_id, shortURL)) {
+    if (allowedAccess(req.session.user_id, shortURL, urlDatabase)) {
       const templateVars = {
         user: users[req.session.user_id],
         shortURL: req.params.shortURL,
@@ -161,14 +134,14 @@ const userRouter = (users, urlDatabase) => {
     const shortURL = req.params.shortURL;
     const templateVars = {
       user: user,
-      urls: urlsForUser(req.session.user_id),
+      urls: urlsForUser(req.session.user_id, urlDatabase),
     };
     // should not display the page unless the user is logged in
     if (!user) {
       return res.render("urls_main", templateVars);
     }
     // does this shortURL belong to the user?
-    if (allowedAccess(req.session.user_id, shortURL)) {
+    if (allowedAccess(req.session.user_id, shortURL, urlDatabase)) {
       urlDatabase[req.params.shortURL]["longURL"] = req.body["longURL"];
       return res.redirect(`/urls/`);
     }
@@ -189,7 +162,7 @@ const userRouter = (users, urlDatabase) => {
       return res.render("urls_main", templateVars);
     }
     // does this shortURL belong to the user?
-    if (allowedAccess(req.session.user_id, shortURL)) {
+    if (allowedAccess(req.session.user_id, shortURL, urlDatabase)) {
       delete urlDatabase[req.params.shortURL];
       res.redirect("/urls");
     }
