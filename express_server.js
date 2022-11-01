@@ -3,6 +3,8 @@ const cookieSession = require("cookie-session");
 const methodOverride = require("method-override");
 
 const userRouter = require("./routers/userRouter");
+const urlRouter = require("./routers/urlRouter");
+
 
 const app = express();
 const PORT = 8080; // default port 8080
@@ -38,6 +40,8 @@ app.use(methodOverride("_method"));
 app.set("view engine", "ejs");
 
 app.use("/", userRouter(users, urlDatabase));
+app.use("/urls", userRouter(users, urlDatabase));
+
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
