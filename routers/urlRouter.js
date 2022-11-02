@@ -3,10 +3,13 @@ const router = express.Router();
 
 const bcrypt = require("bcrypt");
 
-const { generateRandomString, urlsForUser, allowedAccess } = require("../helpers");
+const {
+  generateRandomString,
+  urlsForUser,
+  allowedAccess,
+} = require("../helpers");
 
 const urlRouter = (users, urlDatabase) => {
-
   router.get("/", (req, res) => {
     const user = users[req.session.user_id];
 
@@ -21,7 +24,6 @@ const urlRouter = (users, urlDatabase) => {
     }
     res.render("urls_index", templateVars);
   });
-
 
   router.post("/", (req, res) => {
     // only registered and logged in users can create new tiny URLs
@@ -110,9 +112,7 @@ const urlRouter = (users, urlDatabase) => {
     return res.status(400).send("User did not have permission to delete URL");
   });
 
-
-  return router
-  
+  return router;
 };
 
 module.exports = urlRouter;

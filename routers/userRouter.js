@@ -3,10 +3,14 @@ const router = express.Router();
 
 const bcrypt = require("bcrypt");
 
-const { getUserByEmail, generateRandomString, urlsForUser, allowedAccess } = require("../helpers");
+const {
+  getUserByEmail,
+  generateRandomString,
+  urlsForUser,
+  allowedAccess,
+} = require("../helpers");
 
 const userRouter = (users, urlDatabase) => {
-
   router.get("/login", (req, res) => {
     const templateVars = {
       user: users[req.session["user_id"]],
@@ -60,8 +64,6 @@ const userRouter = (users, urlDatabase) => {
     req.session.user_id = userID;
     res.redirect("/urls");
   });
-
-  
 
   router.get("/logout", (req, res) => {
     req.session = null;

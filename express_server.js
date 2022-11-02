@@ -5,7 +5,6 @@ const methodOverride = require("method-override");
 const userRouter = require("./routers/userRouter");
 const urlRouter = require("./routers/urlRouter");
 
-
 const app = express();
 const PORT = 8080; // default port 8080
 
@@ -41,7 +40,6 @@ app.set("view engine", "ejs");
 
 app.use("/", userRouter(users, urlDatabase));
 app.use("/urls", urlRouter(users, urlDatabase));
-
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
