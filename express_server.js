@@ -40,7 +40,7 @@ app.use(methodOverride("_method"));
 app.set("view engine", "ejs");
 
 app.use("/", userRouter(users, urlDatabase));
-app.use("/urls", userRouter(users, urlDatabase));
+app.use("/urls", urlRouter(users, urlDatabase));
 
 
 app.listen(PORT, () => {
